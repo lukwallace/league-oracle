@@ -1,9 +1,10 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const app = express();
 
-app.get('/', (req, res) => {
-  res.send('Hello!');
-});
+
+app.get('/summoner/:region/:name', (req, res) => { res.send(req.params); });
+app.get('*', (req, res) => { res.status(400).send(); });
 
 // Used for testing
 if (module.parent) {

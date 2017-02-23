@@ -10,6 +10,12 @@
   "author": "wallace",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.14.1"
+    "bluebird": "^3.4.7",
+    "body-parser": "^1.16.1",
+    "chai": "^3.5.0",
+    "dotenv": "^4.0.0",
+    "express": "^4.14.1",
+    "mongoose": "^4.8.4",
+    "request": "^2.79.0"
   }
 }
