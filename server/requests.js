@@ -23,9 +23,13 @@ const callRiot = (query) => {
 const getChampionIndex = (region) => {
   const requestString = {
     baseUrl: `https://global.api.pvp.net`,
-    uri: `/api/lol/${region}/v1.2/champion`,
+    uri: `/api/lol/static-data/${region}/v1.2/champion`,
   }
-  return callRiot(Object.assign({ qs }, requestString));
+
+  const options = Object.assign(qs, {
+    dataById: true
+  });
+  return callRiot(Object.assign({ qs: options }, requestString));
 };
 
 const getSummonerId = (region, name) => {
@@ -33,21 +37,27 @@ const getSummonerId = (region, name) => {
     baseUrl: `https://${region}.api.pvp.net`,
     uri: `/api/lol/${region}/v1.4/summoner/by-name/${name}`,
   }
-  return callRiot(Object.assign({ qs }, requestString));
+  return callRiot(Object.assign({ qs }, requestString))
+  .then(json => json[name].id);
 };
 
-const getMatchRefs = (region, summonerId) => {
+const getMatchRefs = (region, summonerId, since) => {
   const requestString = {
     baseUrl: `https://${region}.api.pvp.net`,
     uri: `/api/lol/${region}/v2.2/matchlist/by-summoner/${summonerId}`,
   };
   // Attach additional options to the request
-  const options = Object.assign(qs, {
-    beginIndex: 0,
-    endIndex: 1
-  });
+  const aux = {};
+  if(since === undefined) {
+    aux.beginIndex = 0;
+    aux.endIndex = 2;
+  } else {
+    aux.beginTime = since;
+  }
 
-  return callRiot(Object.assign({ qs: options }, requestString));
+  const options = Object.assign(qs, aux);
+  return callRiot(Object.assign({ qs: options }, requestString))
+  .then(json => json.matches);
 };
 
 const getMatch = (region, matchRef) => {
@@ -61,25 +71,31 @@ const getMatch = (region, matchRef) => {
 module.exports = { 
   getMatch,
   getSummonerId,
-  getMatchRefs
+  getMatchRefs,
+  getChampionIndex
 };
 
 
+
+
 /* Tests */
-getSummonerId('na', 'wallace')
-.then(json => {
-  const summonerId = json['wallace'].id;
-  return getMatchRefs('na', summonerId);
-})
-.then(json => {
-  const matchId = json.matches[0].matchId;
-  console.log(json.matches[0]);
-  return getMatch('na', matchId);
-})
-.then(json => {
-  // console.log(json);
-})
-.catch(body => console.log('Error', body));
+// getChampionIndex('na')
+// .then(json => console.log(json));
+// getSummonerId('na', 'wallace')
+// .then(json => {
+//   const summonerId = json['wallace'].id;
+//   return getMatchRefs('na', summonerId);
+// })
+// .then(json => {
+//   const matchId = json.matches[0].matchId;
+//   console.log(json.matches[0]);
+//   json.matches[0].champion
+//   return getMatch('na', matchId);
+// })
+// .then(json => {
+//   console.log(json);
+// })
+// .catch(body => console.log('Error', body));
 
 /*
 Storage:
