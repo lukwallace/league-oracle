@@ -60,12 +60,13 @@ const getMatchRefs = (region, summonerId, since) => {
   .then(json => json.matches);
 };
 
-const getMatch = (region, matchRef) => {
+const getMatch = (region, matchRef, playedAs) => {
   const requestString = {
     baseUrl: `https://${region}.api.pvp.net`,
     uri: `/api/lol/${region}/v2.2/match/${matchRef}`,
   };
   return callRiot(Object.assign({ qs }, requestString))
+  .then(json => Object.assign({ playedAs }, json));
 };
 
 module.exports = { 
