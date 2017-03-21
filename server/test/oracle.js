@@ -1,4 +1,4 @@
-const { Oracle } = require('../oracle');
+const Oracle = require('../oracle');
 
 const o = new Oracle();
 o.generateMatrix('wallace')
