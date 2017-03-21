@@ -38,7 +38,8 @@ const getSummonerId = (region, name) => {
     uri: `/api/lol/${region}/v1.4/summoner/by-name/${name}`,
   }
   return callRiot(Object.assign({ qs }, requestString))
-  .then(json => json[name].id);
+  .then(json => json[name].id)
+  .catch(error => -1);
 };
 
 const getMatchRefs = (region, summonerId, since) => {
@@ -50,14 +51,14 @@ const getMatchRefs = (region, summonerId, since) => {
   const aux = {};
   if(since === undefined) {
     aux.beginIndex = 0;
-    aux.endIndex = 2;
+    aux.endIndex = 5;
   } else {
     aux.beginTime = since;
   }
 
   const options = Object.assign(qs, aux);
   return callRiot(Object.assign({ qs: options }, requestString))
-  .then(json => json.matches);
+  .then(json => json.totalGames === 0 ? [] : json.matches);
 };
 
 const getMatch = (region, matchRef, playedAs) => {
@@ -75,28 +76,6 @@ module.exports = {
   getMatchRefs,
   getChampionIndex
 };
-
-
-
-
-/* Tests */
-// getChampionIndex('na')
-// .then(json => console.log(json));
-// getSummonerId('na', 'wallace')
-// .then(json => {
-//   const summonerId = json['wallace'].id;
-//   return getMatchRefs('na', summonerId);
-// })
-// .then(json => {
-//   const matchId = json.matches[0].matchId;
-//   console.log(json.matches[0]);
-//   json.matches[0].champion
-//   return getMatch('na', matchId);
-// })
-// .then(json => {
-//   console.log(json);
-// })
-// .catch(body => console.log('Error', body));
 
 /*
 Storage:
