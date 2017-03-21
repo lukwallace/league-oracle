@@ -1,5 +1,5 @@
 
-/* Parses through match data object returned by Riot; Assumes the match is ranked */
+/* Parses through match data object returned by Riot; Assumes the match is ranked, so all champion values are unique */
 const parseMatch = (match, matrix, championIndex) => {
   const { playedAs, participants, teams } = match;
   const winner = teams[0].winner ? teams[0].teamId : teams[1].teamId;
@@ -32,9 +32,9 @@ const parseMatch = (match, matrix, championIndex) => {
   enemyTeam.forEach(championId => {
     const opponent = championIndex[championId].name;
     if(matrix[yourPick][opponent] === undefined) {
-      matrix[yourPick][opponent] = { wins: 0, totalGames: 0 };
+      matrix[yourPick][opponent] = { wins: 0, total: 0 };
     }
-    matrix[yourPick][opponent].totalGames++;
+    matrix[yourPick][opponent].total++;
     if(youWin) {
       matrix[yourPick][opponent].wins++
     }
