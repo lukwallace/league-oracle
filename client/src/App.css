@@ -7,8 +7,45 @@
   height: 100vh;
 }
 
-.SummonerForm {
+.SummonerForm, .MatchupForm {
+  height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.SummonerForm-enter {
+  opacity: 0.01;
+}
+
+.SummonerForm-enter.SummonerForm-enter-active {
+  opacity: 1;
+  transition: opacity 500ms ease-in;
+}
+
+.SummonerForm-leave {
+  opacity: 1;
+}
+
+.SummonerForm-leave.SummonerForm-leave-active {
+  opacity: 0.01;
+  transition: opacity 300ms ease-in;
+}
+
+.MatchupForm-enter {
+  opacity: 0.01;
+}
+
+.MatchupForm-enter.MatchupForm-enter-active {
+  opacity: 1;
+  transition: opacity 500ms ease-in;
+}
+
+.MatchupForm-leave {
+  opacity: 1;
+}
+
+.MatchupForm-leave.MatchupForm-leave-active {
+  opacity: 0.01;
+  transition: opacity 300ms ease-in;
 }

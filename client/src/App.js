@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { scrollScreen } from './scroll.js';
 import SummonerForm from './SummonerForm.js';
 import MatchupForm from './MatchupForm.js';
 import Matchup from './Matchup.js';
@@ -35,37 +36,6 @@ const mockData = {
   } 
 };
 
-/* https://github.com/fisshy/react-scroll/blob/master/modules/mixins/smooth.js */
-const ease = (x) => {
-  if(x < 0.5) {
-    return Math.pow(x*2, 2)/2;
-  }
-  return 1-Math.pow((1-x)*2, 2)/2;
-};
-
-/* Function for animating vertical scroll */
-const scrollScreen = (duration) => {
-  const startPos = document.body.scrollTop;
-  const delta = window.innerHeight;
-  let start = null;
-
-  const step = (timestamp) => {
-    if(!start) {
-      start = timestamp;
-    }
-    const progress = timestamp - start;
-    const percent = progress >= duration ? 1 : ease(progress / duration);
-    const currPos = startPos + Math.ceil(delta * percent);
-
-    window.scrollTo(0, currPos);
-    if(percent < 1) {
-      window.requestAnimationFrame(step);
-    }
-  };
-
-  window.requestAnimationFrame(step);
-};
-
 
 class App extends Component {
   state = {
@@ -77,6 +47,16 @@ class App extends Component {
     versus: '',
   }
 
+  componentDidMount = () => {
+    fetch('http://localhost:8080/champions')
+    .then(res => res.json())
+    .then(data => {
+      console.log(data);
+    })
+    .catch(err => {
+      console.log('Error', err);      
+    });
+  }
 
   handleSubmit = (event) => {
     event.preventDefault();
@@ -92,9 +72,15 @@ class App extends Component {
   changeForm = (event) => {
     event.preventDefault();
     this.setState({
-      displaySummonerForm: false,
-      displayMatchupForm: true
+      displaySummonerForm: false
     });
+
+    /* Wait until summonerForm is removed. */
+    setTimeout(() => {
+      this.setState({
+        displayMatchupForm: true
+      });
+    }, 500);
   }
 
   render() {
@@ -103,17 +89,19 @@ class App extends Component {
 
     return (
       <div className="App">
-        <SummonerForm
-          visable={displaySummonerForm}
-          changeSummoner={handleChange('summoner')}
-          changeForm={changeForm}
-        />
-        <MatchupForm
-          visable={displayMatchupForm}
-          changePlayedAs={handleChange('playedAs')}
-          changeVersus={handleChange('versus')}
-          handleSubmit={handleSubmit}
-        />
+        <div className="block">
+          <SummonerForm
+            visable={displaySummonerForm}
+            changeSummoner={handleChange('summoner')}
+            changeForm={changeForm}
+          />
+          <MatchupForm
+            visable={displayMatchupForm}
+            changePlayedAs={handleChange('playedAs')}
+            changeVersus={handleChange('versus')}
+            handleSubmit={handleSubmit}
+          />
+        </div>
         <Matchup />
       </div>
     );
