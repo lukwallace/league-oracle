@@ -2,7 +2,7 @@ const Promise = require('bluebird');
 const { getChampionIndex, getSummonerId, getMatchRefs, getMatch } = require('./requests');
 const { parseMatch, sanitize } = require('./helpers');
 
-/* Singleton Object for the webserver  -- for now all data is stored in local 
+/* Singleton Object for the webserver  -- for now all data is stored locally
 Will keep track of the summoners it has served in the local memory for now. Will later be uprooted by whatever database is deemed fit. Right now considering MongoDB for matricies, and Redis for summoner id and lastMatch */
 
 /* 
