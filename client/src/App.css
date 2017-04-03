@@ -7,6 +7,11 @@
   height: 100vh;
 }
 
+.MatchupForm input {
+  margin-left: 5px;
+  margin-right: 5px;
+}
+
 .SummonerForm, .MatchupForm {
   height: 100vh;
   display: flex;

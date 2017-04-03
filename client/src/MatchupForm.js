@@ -1,4 +1,6 @@
 import React from 'react';
+import Select from 'react-select';
+import 'react-select/dist/react-select.css';
 import ReactCSSTransitionGroup from 'react-addons-css-transition-group';
 
 
@@ -9,9 +11,20 @@ const MatchupForm = ({ changePlayedAs, changeVersus, handleSubmit, visable }) =>
       <div className="MatchupForm">
         <form onSubmit={handleSubmit}>
           <h1> Gimme some matchups. </h1>
-          <input type="text" onChange={changePlayedAs} /><br/>
-          <input type="text" onChange={changeVersus} /><br/>
-          <input className="Submit-btn" type="submit" value="Go!"/>
+          <Select 
+          options={[
+            { value: 'one', label: 'One' },
+            { value: 'two', label: 'Two' }
+          ]}
+          onChange={changePlayedAs} />
+          <Select 
+          options={[
+            { value: 'one', label: 'One' },
+            { value: 'two', label: 'Two' }
+          ]}
+          onChange={changeVersus} />
+
+          <input className="Submit-btn" type="submit" value="Go"/>
         </form>
       </div>
     );

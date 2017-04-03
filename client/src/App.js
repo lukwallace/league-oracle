@@ -58,9 +58,15 @@ class App extends Component {
     });
   }
 
-  handleSubmit = (event) => {
+  submitMatchup = (event) => {
     event.preventDefault();
     scrollScreen(650);
+  }
+
+  handleSelect = (key) => (option) => {
+    const newState = {};
+    newState[key] = option.value;
+    this.setState(newState);
   }
 
   handleChange = (key) => (event) => {
@@ -69,7 +75,7 @@ class App extends Component {
     this.setState(newState);
   }
 
-  changeForm = (event) => {
+  submitSummoner = (event) => {
     event.preventDefault();
     this.setState({
       displaySummonerForm: false
@@ -84,7 +90,7 @@ class App extends Component {
   }
 
   render() {
-    const { handleChange, handleSubmit, changeForm, state } = this;
+    const { handleChange, handleSelect, submitMatchup, submitSummoner, state } = this;
     const { displaySummonerForm, displayMatchupForm } = state;
 
     return (
@@ -93,13 +99,13 @@ class App extends Component {
           <SummonerForm
             visable={displaySummonerForm}
             changeSummoner={handleChange('summoner')}
-            changeForm={changeForm}
+            handleSubmit={submitSummoner}
           />
           <MatchupForm
             visable={displayMatchupForm}
-            changePlayedAs={handleChange('playedAs')}
-            changeVersus={handleChange('versus')}
-            handleSubmit={handleSubmit}
+            changePlayedAs={handleSelect('playedAs')}
+            changeVersus={handleSelect('versus')}
+            handleSubmit={submitMatchup}
           />
         </div>
         <Matchup />
