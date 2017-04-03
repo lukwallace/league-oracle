@@ -65,7 +65,11 @@ class App extends Component {
 
   handleSelect = (key) => (option) => {
     const newState = {};
-    newState[key] = option.value;
+    if(option) {
+      newState[key] = option.value;
+    } else {
+      newState[key] = '';
+    }
     this.setState(newState);
   }
 
@@ -91,7 +95,7 @@ class App extends Component {
 
   render() {
     const { handleChange, handleSelect, submitMatchup, submitSummoner, state } = this;
-    const { displaySummonerForm, displayMatchupForm } = state;
+    const { displaySummonerForm, displayMatchupForm, versus, playedAs } = state;
 
     return (
       <div className="App">
@@ -103,6 +107,8 @@ class App extends Component {
           />
           <MatchupForm
             visable={displayMatchupForm}
+            playedAs={playedAs}
+            versus={versus}
             changePlayedAs={handleSelect('playedAs')}
             changeVersus={handleSelect('versus')}
             handleSubmit={submitMatchup}
