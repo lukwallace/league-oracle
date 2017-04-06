@@ -25,7 +25,7 @@ app.get('/summoner/:region/:name', (req, res) => {
 app.get('/champions', (req, res) => {
   oracle.championIndexPromise
   .then(championIndex => {
-    res.send(Object.keys(championIndex).map(key => championIndex[key].name));
+    res.send(Object.keys(championIndex).map(id => { return { label: championIndex[id].name, value: id } }));
   })
 });
 
