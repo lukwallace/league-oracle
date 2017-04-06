@@ -11,6 +11,11 @@
   margin: 5px;
 }
 
+.column {
+  display: inline-block;
+  width: 25vw;
+}
+
 .MatchupForm input {
   margin-left: 5px;
   margin-right: 5px;
@@ -19,6 +24,7 @@
 .SummonerForm, .MatchupForm {
   height: 100vh;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
 }

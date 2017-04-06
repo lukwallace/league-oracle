@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import { scrollScreen } from './scroll.js';
 import SummonerForm from './SummonerForm.js';
 import MatchupForm from './MatchupForm.js';
 import Matchup from './Matchup.js';
@@ -45,22 +44,18 @@ class App extends Component {
     matrix: mockData,
     playedAs: '',
     versus: '',
+    championIndex: null
   }
 
   componentDidMount = () => {
     fetch('http://localhost:8080/champions')
     .then(res => res.json())
     .then(data => {
-      console.log(data);
+      this.setState({ championIndex: data })
     })
     .catch(err => {
       console.log('Error', err);      
     });
-  }
-
-  submitMatchup = (event) => {
-    event.preventDefault();
-    scrollScreen(650);
   }
 
   handleSelect = (key) => (option) => {
@@ -94,8 +89,8 @@ class App extends Component {
   }
 
   render() {
-    const { handleChange, handleSelect, submitMatchup, submitSummoner, state } = this;
-    const { displaySummonerForm, displayMatchupForm, versus, playedAs } = state;
+    const { handleChange, handleSelect, submitSummoner, state } = this;
+    const { displaySummonerForm, displayMatchupForm, versus, playedAs, championIndex } = state;
 
     return (
       <div className="App">
@@ -109,9 +104,9 @@ class App extends Component {
             visable={displayMatchupForm}
             playedAs={playedAs}
             versus={versus}
+            options={championIndex}
             changePlayedAs={handleSelect('playedAs')}
             changeVersus={handleSelect('versus')}
-            handleSubmit={submitMatchup}
           />
         </div>
         <Matchup />

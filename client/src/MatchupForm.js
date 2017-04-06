@@ -1,32 +1,34 @@
 import React from 'react';
 import Select from 'react-select';
+import { scrollScreen } from './scroll.js';
 import 'react-select/dist/react-select.css';
 import ReactCSSTransitionGroup from 'react-addons-css-transition-group';
 
 
-const MatchupForm = ({ playedAs, versus, changePlayedAs, changeVersus, handleSubmit, visable }) => {
+const MatchupForm = ({ playedAs, versus, changePlayedAs, changeVersus, handleSubmit, visable, options }) => {
   let component;
+  if(playedAs.length !== 0 && versus.length !== 0) {
+    scrollScreen(650);
+  }
+
   if(visable) {
     component = (
       <div className="MatchupForm">
-        <form onSubmit={handleSubmit}>
-          <h1> Gimme some matchups. </h1>
-          <Select 
-          value={playedAs ? playedAs : ''}
-          options={[
-            { value: 'one', label: 'One' },
-            { value: 'two', label: 'Two' }
-          ]}
-          onChange={changePlayedAs} />
-          <Select 
-          value={versus ? versus : ''}
-          options={[
-            { value: 'one', label: 'One' },
-            { value: 'two', label: 'Two' }
-          ]}
-          onChange={changeVersus} />
-          <input className="Submit-btn" type="submit" value="Go"/>
-        </form>
+        <h1> Matchups? </h1>
+        <div>
+          <div className="column">
+            <Select 
+            value={playedAs }
+            options={options}
+            onChange={changePlayedAs} />
+          </div>
+          <div className="column">
+            <Select 
+            value={versus}
+            options={options}
+            onChange={changeVersus} />
+          </div>
+        </div>
       </div>
     );
   }
