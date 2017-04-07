@@ -1,10 +1,23 @@
 const express = require('express');
-const mongoose = require('mongoose');
+const bluebird = require('bluebird');
+const redis = require('redis');
+bluebird.promisifyAll(redis.RedisClient.prototype);
+bluebird.promisifyAll(redis.Multi.prototype);
+
 const Oracle = require('./oracle');
 
+
+const client = redis.createClient();
 const oracle = new Oracle();
 const app = express();
 
+
+// client.on('error', (err) => {
+//   console.log('We got problems:', err);
+// });
+
+// client.set('key', 'value', redis.print);
+// client.getAsync('key').then(res => console.log(res));
 
 /* CORS Headers */
 app.use(function(req, res, next) {
