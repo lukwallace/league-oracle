@@ -2,7 +2,9 @@ import React, { Component } from 'react';
 import SummonerForm from './SummonerForm.js';
 import MatchupForm from './MatchupForm.js';
 import Matchup from './Matchup.js';
+import { fetchChampionList, fetchMatrix } from './requests.js'
 import './App.css';
+
 
 const mockData = { 
   Ekko: {
@@ -40,18 +42,19 @@ class App extends Component {
   state = {
     displaySummonerForm: true,
     displayMatchupForm: false,
-    summoner: '',
     matrix: mockData,
+    summonerName: '',
     playedAs: '',
     versus: '',
+    matchup: null,
     championIndex: null
   }
 
   componentDidMount = () => {
-    fetch('http://localhost:8080/champions')
-    .then(res => res.json())
+    fetchChampionList()
     .then(data => {
-      this.setState({ championIndex: data })
+      const sorted = data.sort((a, b) => a.label < b.label ? -1 : a.label > b.label ? 1 : 0);
+      this.setState({ championIndex: sorted })
     })
     .catch(err => {
       console.log('Error', err);      
@@ -80,24 +83,29 @@ class App extends Component {
       displaySummonerForm: false
     });
 
-    /* Wait until summonerForm is removed. */
-    setTimeout(() => {
-      this.setState({
-        displayMatchupForm: true
-      });
-    }, 500);
+    fetchMatrix(this.state.summonerName).
+    then(matrix => {
+
+      /* Wait until summonerForm is removed. */
+      setTimeout(() => {
+        this.setState({
+          matrix,
+          displayMatchupForm: true
+        });
+      }, 300);
+    });
   }
 
   render() {
-    const { handleChange, handleSelect, submitSummoner, state } = this;
-    const { displaySummonerForm, displayMatchupForm, versus, playedAs, championIndex } = state;
+    const { showStats, handleChange, handleSelect, submitSummoner, state } = this;
+    const { displaySummonerForm, displayMatchupForm, versus, playedAs, championIndex, matrix } = state;
 
     return (
       <div className="App">
         <div className="block">
           <SummonerForm
             visable={displaySummonerForm}
-            changeSummoner={handleChange('summoner')}
+            changeSummoner={handleChange('summonerName')}
             handleSubmit={submitSummoner}
           />
           <MatchupForm
@@ -109,7 +117,11 @@ class App extends Component {
             changeVersus={handleSelect('versus')}
           />
         </div>
-        <Matchup />
+        <Matchup
+          matrix={matrix}
+          playedAs={playedAs}
+          versus={versus}
+        />
       </div>
     );
   }
