@@ -8,17 +8,69 @@ const qs = {
   api_key: process.env.RIOT_API_KEY
 };
 
-const callRiot = (query) => {
-  return new Promise(function(resolve, reject) {
+/* 
+API Limitations:
+10 Requests every 10 Seconds (10000)
+500 Requests every 10 Minutes (600000)
+======================================
+1 Request every 1.2 Seconds (1200)
+*/
+
+
+const queue = [];
+let littleZero;
+let bigZero;
+let bigWait;
+
+const _riot = (query) => {
+  return new Promise((resolve, reject) => {
     request(query, (err, res, body) => {
       if(!err && res.statusCode === 200) {
         resolve(JSON.parse(body));
       } else {
+        console.log('Problem!');
         reject(body);
       }
     });
   });
+};
+
+const callRiot = (query) => {
+  if(queue.length === 0) {
+    littleZero = Date.now();
+  }
+
+  if(queue.length < 10) {
+    console.log('Working on a query', query.uri);
+    const req = _riot(query);
+    queue.push(req);
+    return req;
+
+  } else if(queue.length === 10) {
+    bigWait = Promise.all(queue)
+    .then(queries => {
+      /* 10 seconds minus the time taken to complete all queries */
+      const timeLeft = 11000 - (Date.now() - littleZero);
+      if(timeLeft < 0) {
+        queue.length = 0;
+        return callRiot(query);
+      } else {
+        console.log('Overflow - setting timeout:', timeLeft);
+        return new Promise((resolve, reject) => {
+          setTimeout(() => {
+            queue.length = 0;
+            resolve(callRiot(query));
+          }, timeLeft);
+        });
+      }
+    });
+    return bigWait;
+
+  } else if(queue.length > 10) {
+    return bigWait.then(() => callRiot(query));
+  }
 }
+
 
 const getChampionIndex = (region) => {
   const requestString = {
@@ -51,7 +103,7 @@ const getMatchRefs = (region, summonerId, since) => {
   const aux = {};
   if(since === undefined) {
     aux.beginIndex = 0;
-    aux.endIndex = 5;
+    aux.endIndex = 10;
   } else {
     aux.beginTime = since;
   }
@@ -61,13 +113,14 @@ const getMatchRefs = (region, summonerId, since) => {
   .then(json => json.totalGames === 0 ? [] : json.matches);
 };
 
-const getMatch = (region, matchRef, playedAs) => {
+const getMatch = (region, matchRef) => {
+  const { matchId, champion } = matchRef;
   const requestString = {
     baseUrl: `https://${region}.api.pvp.net`,
-    uri: `/api/lol/${region}/v2.2/match/${matchRef}`,
+    uri: `/api/lol/${region}/v2.2/match/${matchId}`,
   };
   return callRiot(Object.assign({ qs }, requestString))
-  .then(json => Object.assign({ playedAs }, json));
+  .then(json => Object.assign({ playedAs: champion }, json));
 };
 
 module.exports = { 
@@ -76,6 +129,8 @@ module.exports = {
   getMatchRefs,
   getChampionIndex
 };
+
+
 
 /*
 Storage:
@@ -139,7 +194,7 @@ We could probably map our previous value to a key-value pair:
   "user.ChampionName.EnemyChampionName.wins" = 52
   "user.ChampionName.EnemyChampionName.total" = 100
 
-Retrieval would still be 2C, since we still have to check every champion. Updating would be constant. Not super versed in Redis
+Retrieval would still be 2C but will be for all matchuips. Updating would be constant. Not super versed in Redis
 quite yet. Will have to come back.
 
 ==========
