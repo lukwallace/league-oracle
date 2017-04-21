@@ -2,7 +2,26 @@
 const Profile = require('./profileModel.js');
 
 
-const getMatrixById = (id) => {
-  
-};
+const test = new Profile({ 
+  id: 123,
+  name: 'Wallace',
+  lastMatch: 321,
+  matrix: {
+    ekko: {
+      wat: 'wat'
+    },
+    braum: {
+      wat: 'wat'
+    }
+  }
+});
+
+
+test.save()
+.then(doc => {
+  return Profile.findOne({ id: 1234 }).exec()
+})
+.then(doc => {
+  console.log('Found it!', doc);
+});
 
