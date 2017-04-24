@@ -40,34 +40,26 @@ const callRiot = (query) => {
     littleZero = Date.now();
   }
 
+  if(queue.length === 9) {
+    console.log('Overflow: setting timeout');
+    queue.push(new Promise((resolve, reject) => {
+      setTimeout(() => {
+        console.log('Resuming!');
+        queue.length = 0;
+        resolve();
+      }, 10000);
+    }));
+  }
+
   if(queue.length < 10) {
     console.log('Working on a query', query.uri);
     const req = _riot(query);
     queue.push(req);
     return req;
-
-  } else if(queue.length === 10) {
-    bigWait = Promise.all(queue)
-    .then(queries => {
-      /* 10 seconds minus the time taken to complete all queries */
-      const timeLeft = 11000 - (Date.now() - littleZero);
-      if(timeLeft < 0) {
-        queue.length = 0;
-        return callRiot(query);
-      } else {
-        console.log('Overflow - setting timeout:', timeLeft);
-        return new Promise((resolve, reject) => {
-          setTimeout(() => {
-            queue.length = 0;
-            resolve(callRiot(query));
-          }, timeLeft);
-        });
-      }
+  }  else if(queue.length >= 10) {
+    return Promise.all(queue).then(() => {
+      return callRiot(query)
     });
-    return bigWait;
-
-  } else if(queue.length > 10) {
-    return bigWait.then(() => callRiot(query));
   }
 }
 
@@ -103,7 +95,7 @@ const getMatchRefs = (region, summonerId, since) => {
   const aux = {};
   if(since === undefined) {
     aux.beginIndex = 0;
-    aux.endIndex = 10;
+    aux.endIndex = 20;
   } else {
     aux.beginTime = since;
   }
