@@ -18,46 +18,66 @@ API Limitations:
 
 
 const queue = [];
-let littleZero;
-let bigZero;
-let bigWait;
+let requestNum = 0;
+let atZero = undefined;
+let waitPromise = undefined;
 
 const _riot = (query) => {
+  // console.log('Working on query', query.uri);
   return new Promise((resolve, reject) => {
     request(query, (err, res, body) => {
       if(!err && res.statusCode === 200) {
         resolve(JSON.parse(body));
       } else {
-        console.log('Problem!');
+        console.log(query.uri, ':Retry After:', res.headers['retry-after']);
         reject(body);
       }
     });
   });
 };
 
+const _wait = (time) => {
+  console.log('Waiting for', time);
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      console.log('Resuming!');
+      waitPromise = undefined;
+      resolve();
+    }, time);
+  });
+}
+
+/* Incomplete: does not account for stagnated calls */
 const callRiot = (query) => {
-  if(queue.length === 0) {
+  console.log('Contacting Riot . . .', query.uri);
+  if(requestNum % 10 === 0) {
     littleZero = Date.now();
   }
 
-  if(queue.length === 9) {
-    console.log('Overflow: setting timeout');
-    queue.push(new Promise((resolve, reject) => {
-      setTimeout(() => {
-        console.log('Resuming!');
-        queue.length = 0;
-        resolve();
-      }, 10000);
-    }));
+  if(requestNum === 0) {
+    bigZero = Date.now();
   }
 
-  if(queue.length < 10) {
-    console.log('Working on a query', query.uri);
-    const req = _riot(query);
-    queue.push(req);
-    return req;
-  }  else if(queue.length >= 10) {
-    return Promise.all(queue).then(() => {
+  /* If you're not waiting */
+  if(waitPromise === undefined) {
+
+    /* If you're the last one, initiate a wait */
+    if(requestNum % 10 === 9) {
+      const since = requestNum === 499 ? bigZero : littleZero;
+      const waitTime = requestNum === 499 ? 600000 : 10000;
+
+      const timeElapsed = Date.now() - since;
+      const timeLeft = waitTime - timeElapsed + 1000;
+      if(timeLeft > 0) { 
+        waitPromise = _wait(timeLeft);
+      }
+    }
+
+    requestNum = requestNum === 500 ? 0 : requestNum + 1;
+    return _riot(query);
+
+  } else {
+    return waitPromise.then(() => {
       return callRiot(query)
     });
   }
