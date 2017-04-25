@@ -47,35 +47,33 @@ const _wait = (time) => {
   });
 }
 
-/* Incomplete: does not account for stagnated calls */
 const callRiot = (query) => {
   console.log('Contacting Riot . . .', query.uri);
-  if(requestNum % 10 === 0) {
-    littleZero = Date.now();
-  }
-
-  if(requestNum === 0) {
-    bigZero = Date.now();
-  }
 
   /* If you're not waiting */
   if(waitPromise === undefined) {
 
-    /* If you're the last one, initiate a wait */
-    if(requestNum % 10 === 9) {
-      const since = requestNum === 499 ? bigZero : littleZero;
-      const waitTime = requestNum === 499 ? 600000 : 10000;
+    /* Check the tenth from the last request to see if you can make another */
+    if(queue.length >= 10) {
+      const timeElapsed10 = Date.now() - queue[queue.length - 10].timestamp;
+      const timeElapsed500 = queue.length === 500 ? (Date.now() - queue[0].timestamp) : Infinity;
 
-      const timeElapsed = Date.now() - since;
-      const timeLeft = waitTime - timeElapsed + 1000;
-      if(timeLeft > 0) { 
-        waitPromise = _wait(timeLeft);
+      const waitTime = Math.max(10000 - timeElapsed10, 600000 - timeElapsed500);
+      if(waitTime > 0) {
+        waitPromise = _wait(waitTime + 1000);
+        return waitPromise.then(() => callRiot(query));
       }
     }
+    
+    const req = _riot(query);
+    const timestamp = Date.now();
 
-    requestNum = requestNum === 500 ? 0 : requestNum + 1;
-    return _riot(query);
+    if(queue.length === 500) {
+      queue.shift();
+    }
 
+    queue.push({ req, timestamp });
+    return req;
   } else {
     return waitPromise.then(() => {
       return callRiot(query)
@@ -115,7 +113,7 @@ const getMatchRefs = (region, summonerId, since) => {
   const aux = {};
   if(since === undefined) {
     aux.beginIndex = 0;
-    aux.endIndex = 20;
+    aux.endIndex = 30;
   } else {
     aux.beginTime = since;
   }
