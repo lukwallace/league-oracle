@@ -19,9 +19,11 @@ const test = new Profile({
 
 test.save()
 .then(doc => {
-  return Profile.findOne({ id: 1234 }).exec()
+  return Profile.findOne({ id: 123 }).exec()
 })
 .then(doc => {
   console.log('Found it!', doc);
+  console.log('Cleansing');
+  Profile.remove({});
 });
 
