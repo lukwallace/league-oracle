@@ -29,6 +29,4 @@ const scrollScreen = (duration) => {
   window.requestAnimationFrame(step);
 };
 
-module.exports = {
-  scrollScreen
-};
+export { scrollScreen };

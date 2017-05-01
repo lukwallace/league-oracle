@@ -13,7 +13,4 @@ let fetchMatrix = (summonerName) => {
 
 fetchMatrix = () => new Promise((resolve, reject) => resolve('Stubbed!'));
 
-module.exports = {
-  fetchChampionList,
-  fetchMatrix,
-};
+export { fetchChampionList, fetchMatrix };
