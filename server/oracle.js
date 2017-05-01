@@ -2,21 +2,23 @@ const Promise = require('bluebird');
 const redis = require('redis');
 const Profile = require('./profile/profileModel.js');
 
-// const client = redis.createClient();
+const client = redis.createClient();
 Promise.promisifyAll(redis.RedisClient.prototype);
 Promise.promisifyAll(redis.Multi.prototype);
 
 /* Some test code for redis */
-// client.on('ready', () => {
-//   console.log('Redis connection open and ready!')
-// });
-// client.on('error', (err) => {
-//   console.log('We got problems:', err);
-// });
+client.on('ready', () => {
+  console.log('Redis connection open and ready!')
+});
+client.on('error', (err) => {
+  console.log('We got problems:', err);
+});
 
-// client.set('key', 'value', redis.print);
-// client.getAsync('key').then(res => console.log(res));
+// client.flushall(redis.print);
+// client.hmsetAsync('na:wallace', 'key', 'value', 'lastMatch', 'asd').then(res => console.log(res));
+// client.hgetallAsync('na:wale').then(res => console.log(res));
 
+/* Riot API calls */
 const { getChampionIndex, getSummonerId, getMatchRefs, getMatch } = require('./requests');
 const { parseMatch } = require('./helpers');
 
@@ -42,33 +44,34 @@ class Oracle {
     .then(json => json.data);
   }
 
-
-  fetchSummoner (name) {
-    const { summoners, region } = this;
+  /* Retrieves a summoners id, first via local storage otherwise through Riot */
+  fetchId (name) {
+    const { region } = this;
     const key = region + ':' + name;
-    if(summoners[key]) {
-      return new Promise((resolve, reject) => {
-        resolve(summoners[key]);
-      });
-    }
 
-    return getSummonerId(this.region, name)
-    .then(id => {
-      const summoner = { id, lastMatch: undefined };
-      this.summoners[key] = summoner;
-      return summoner;
+    return client.hgetallAsync(key)
+    .then(summoner => {
+      if(summoner) {
+        console.log('Summoner:', summoner)
+        return summoner.id
+      } else {
+        return getSummonerId(this.region, name)
+        .then(id => {
+          client.hmset(key, 'id', id, 'lastMatch', -1, redis.print);
+          return id;
+        }); 
+      }
     });
+
   }
 
   fetchMatrix (name) {
-    let id;
-    return this.fetchSummoner(name)
-    .then(summoner => {
-      id = summoner.id;
-      return Profile.findOne({ id }).exec()
+    return this.fetchId(name)
+    .then(id => {
+      return Promise.all([id, Profile.findOne({ id }).exec()]);
     })
-    .then(profile => {
-      console.log('Searched profiles');
+    .spread((id, profile) => {
+      console.log('Id and profile:', id, profile);
       if(profile) {
         return profile.matrix;
       } else {
@@ -77,6 +80,7 @@ class Oracle {
     });
   }
 
+  /* Will create a new profile, with name and id and matrix */
   initializeMatrix (name, id) {
     const matrix = {};
     let lastMatch = -1;
@@ -89,7 +93,6 @@ class Oracle {
       }
       const matches = [];
       matchRefs.forEach(matchRef => {
-        // const { champion, matchId } = matchRef;
         matches.push(getMatch(region, matchRef));
       })
       return Promise.all([Promise.all(matches), championIndexPromise]);

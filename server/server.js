@@ -1,23 +1,10 @@
 const express = require('express');
-const bluebird = require('bluebird');
-const redis = require('redis');
-bluebird.promisifyAll(redis.RedisClient.prototype);
-bluebird.promisifyAll(redis.Multi.prototype);
-
 const Oracle = require('./oracle');
+const { sanitize } = require('./helpers');
 
-
-const client = redis.createClient();
 const oracle = new Oracle();
 const app = express();
 
-
-// client.on('error', (err) => {
-//   console.log('We got problems:', err);
-// });
-
-// client.set('key', 'value', redis.print);
-// client.getAsync('key').then(res => console.log(res));
 
 /* CORS Headers */
 app.use(function(req, res, next) {
@@ -29,7 +16,7 @@ app.use(function(req, res, next) {
 app.get('/summoner/:region/:name', (req, res) => { 
   const { region, name } = req.params;
   oracle.region = region;
-  oracle.generateMatrix(name)
+  oracle.fetchMatrix(sanitize(name))
   .then(matrix => {
     res.send(matrix);
   });
@@ -44,7 +31,7 @@ app.get('/champions', (req, res) => {
 
 app.get('*', (req, res) => { res.status(400).send(); });
 
-// Used for testing
+/* Used for testing */
 if (module.parent) {
   module.exports = app;
 } else {

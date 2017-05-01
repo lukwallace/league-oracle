@@ -16,8 +16,7 @@ API Limitations:
 1 Request every 1.2 Seconds (1200)
 */
 
-
-const queue = [];
+const queue = []; /* Queue as an array may later need to be replaced with a list, b/c shifting takes O(n) */
 let requestNum = 0;
 let atZero = undefined;
 let waitPromise = undefined;
@@ -37,7 +36,7 @@ const _riot = (query) => {
 };
 
 const _wait = (time) => {
-  console.log('Waiting for', time);
+  // console.log('Waiting for', time);
   return new Promise((resolve, reject) => {
     setTimeout(() => {
       console.log('Resuming!');
@@ -74,6 +73,7 @@ const callRiot = (query) => {
 
     queue.push({ req, timestamp });
     return req;
+
   } else {
     return waitPromise.then(() => {
       return callRiot(query)
@@ -113,7 +113,7 @@ const getMatchRefs = (region, summonerId, since) => {
   const aux = {};
   if(since === undefined) {
     aux.beginIndex = 0;
-    aux.endIndex = 30;
+    aux.endIndex = 5;
   } else {
     aux.beginTime = since;
   }
