@@ -15,7 +15,7 @@ app.use(function(req, res, next) {
 
 app.get('/summoner/:region/:name', (req, res) => { 
   const { region, name } = req.params;
-  oracle.region = region;
+  oracle.region = sanitize(region);
   oracle.fetchMatrix(sanitize(name))
   .then(matrix => {
     res.send(matrix);

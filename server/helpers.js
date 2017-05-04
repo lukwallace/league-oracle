@@ -41,10 +41,11 @@ const parseMatch = (match, matrix, championIndex) => {
   });
 };
 
-/* Used to sanitize names, wanked out in case we want to change later */
+/* Used to sanitize names/regions; remove whitespace and illegal characters */
 const sanitize = (string) => {
-  return string.toLowerCase().replace(/\s+/g, '');
+  return string.toLowerCase().replace(/[\s<>:]+/g, '');
 };
+
 
 module.exports = { 
   parseMatch,
