@@ -34,7 +34,6 @@ Example:
 
 class Oracle {
   constructor () {
-    this.summoners = {};
     this.region = 'na';
     this.championIndexPromise = this.loadChampionIndex();
   }
@@ -44,52 +43,45 @@ class Oracle {
     .then(json => json.data);
   }
 
-  /* Retrieves a summoners id, first via local storage otherwise through Riot */
-  fetchId (name) {
+  fetchMatrix (name) {
     const { region } = this;
     const key = region + ':' + name;
+    let cached = false;
 
-    return client.hgetallAsync(key)
-    .then(summoner => {
-      if(summoner) {
-        console.log('Summoner:', summoner)
-        return summoner.id
-      } else {
-        return getSummonerId(this.region, name)
-        .then(id => {
-          client.hmset(key, 'id', id, 'lastMatch', -1, redis.print);
-          return id;
-        }); 
+    return client.hgetAsync(key, 'id')
+    .then(id => {
+      if(id) {
+        cached = true;
+        return id;
       }
-    });
-
-  }
-
-  fetchMatrix (name) {
-    return this.fetchId(name)
+      client.hset(key, 'id', id);
+      return getSummonerId(region, name);
+    })
     .then(id => {
       return Promise.all([id, Profile.findOne({ id }).exec()]);
     })
     .spread((id, profile) => {
-      console.log('Id and profile:', id, profile);
-      if(profile) {
-        return profile.matrix;
-      } else {
-        return this.initializeMatrix(name, id)
+      if(!profile) {
+        const lastMatch = -1;
+        const matrix = {};
+        profile = new Profile({ id, name, region, lastMatch, matrix });
       }
+
+      if(cached) {
+        return profile.matrix;
+      }
+      return this.updateProfile(profile);
     });
   }
 
-  /* Will create a new profile, with name and id and matrix */
-  initializeMatrix (name, id) {
-    const matrix = {};
-    let lastMatch = -1;
+  updateProfile (profile) {
     const { region, championIndexPromise } = this;
+    const { id, matrix } = profile;
 
     return getMatchRefs(region, id)
     .then(matchRefs => {
       if(matchRefs.length !== 0) {
-        lastMatch = matchRefs[0].timestamp + 1;
+        profile.lastMatch = matchRefs[0].timestamp + 1;
       }
       const matches = [];
       matchRefs.forEach(matchRef => {
@@ -98,8 +90,8 @@ class Oracle {
       return Promise.all([Promise.all(matches), championIndexPromise]);
     })
     .spread((matches, championIndex)  => {
-      matches.forEach(match => parseMatch(match, matrix, championIndex))
-      const profile = new Profile({ id, name, region, lastMatch, matrix });
+      matches.forEach(match => parseMatch(match, matrix, championIndex));
+      client.hset(region + ':' + name, 'lastMatch', profile.lastMatch);
       return profile.save();
     })
     .then(profile => {
@@ -109,4 +101,3 @@ class Oracle {
 };
 
 module.exports = Oracle;
-
