@@ -1,18 +1,18 @@
-const { getChampionIndex, getSummonerId, getMatchRefs, getMatch } = require('../requests');
+const { getChampionIndex, getAccountId, getMatchRefs, getMatch } = require('../requests');
 const Promise = require('bluebird');
 
 /* Tests */
-getChampionIndex('na')
+getChampionIndex('na1')
 .then(json => {
-  return getSummonerId('na', 'wallace');
+  return getAccountId('na1', 'wallace');
 })
 .then(id => {
-  return getMatchRefs('na', id);
+  return getMatchRefs('na1', id);
 })
 .then(matchRefs => {
   const matches = [];
   matchRefs.forEach(matchRef => {
-    matches.push(getMatch('na', matchRef));
+    matches.push(getMatch('na1', matchRef));
   });
   return Promise.all(matches);
 })
