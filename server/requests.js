@@ -4,9 +4,11 @@ require('dotenv').config();
 const request = require('request');
 const Promise = require('bluebird');
 
-const qs = {
-  api_key: process.env.RIOT_API_KEY
-};
+
+const base = (region, options={}) => {
+  const qs = Object.assign({ api_key: process.env.RIOT_API_KEY }, options);
+  return { baseUrl: `https://${region}.api.riotgames.com`, qs }
+}
 
 /* 
 API Limitations:
@@ -81,61 +83,48 @@ const callRiot = (query) => {
   }
 }
 
-
 const getChampionIndex = (region) => {
-  const requestString = {
-    baseUrl: `https://global.api.pvp.net`,
-    uri: `/api/lol/static-data/${region}/v1.2/champion`,
-  }
-
-  const options = Object.assign(qs, {
-    dataById: true
-  });
-  return callRiot(Object.assign({ qs: options }, requestString));
+  const requestString = base(region, { dataById: true });
+  requestString.uri = `/lol/static-data/v3/champions`;
+  return callRiot(requestString);
 };
 
-const getSummonerId = (region, name) => {
-  const requestString = {
-    baseUrl: `https://${region}.api.pvp.net`,
-    uri: `/api/lol/${region}/v1.4/summoner/by-name/${name}`,
-  }
-  return callRiot(Object.assign({ qs }, requestString))
-  .then(json => json[name].id)
+const getAccountId = (region, name) => {
+  const requestString = base(region);
+  requestString.uri = `/lol/summoner/v3/summoners/by-name/${name}`;
+  return callRiot(requestString)
+  .then(json => json.accountId)
   .catch(error => -1);
 };
 
-const getMatchRefs = (region, summonerId, since) => {
-  const requestString = {
-    baseUrl: `https://${region}.api.pvp.net`,
-    uri: `/api/lol/${region}/v2.2/matchlist/by-summoner/${summonerId}`,
-  };
-  // Attach additional options to the request
-  const aux = {};
+const getMatchRefs = (region, accountId, since) => {
+  const options = {};
   if(since === undefined) {
-    aux.beginIndex = 0;
-    aux.endIndex = 5;
+    options.beginIndex = 0;
+    options.endIndex = 5;
   } else {
-    aux.beginTime = since;
+    options.beginTime = since;
   }
 
-  const options = Object.assign(qs, aux);
-  return callRiot(Object.assign({ qs: options }, requestString))
+  const requestString = base(region, options);
+  requestString.uri = `/lol/match/v3/matchlists/by-account/${accountId}`;
+
+  return callRiot(requestString)
   .then(json => json.totalGames === 0 ? [] : json.matches);
 };
 
 const getMatch = (region, matchRef) => {
-  const { matchId, champion } = matchRef;
-  const requestString = {
-    baseUrl: `https://${region}.api.pvp.net`,
-    uri: `/api/lol/${region}/v2.2/match/${matchId}`,
-  };
-  return callRiot(Object.assign({ qs }, requestString))
+  const { gameId, champion } = matchRef;
+  const requestString = base(region);
+  requestString.uri = `/lol/match/v3/matches/${gameId}`;
+
+  return callRiot(requestString)
   .then(json => Object.assign({ playedAs: champion }, json));
 };
 
 module.exports = { 
   getMatch,
-  getSummonerId,
+  getAccountId,
   getMatchRefs,
   getChampionIndex
 };

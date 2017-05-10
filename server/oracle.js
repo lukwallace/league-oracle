@@ -16,7 +16,7 @@ client.on('error', (err) => {
 });
 
 /* Riot API calls */
-const { getChampionIndex, getSummonerId, getMatchRefs, getMatch } = require('./requests');
+const { getChampionIndex, getAccountId, getMatchRefs, getMatch } = require('./requests');
 const { parseMatch } = require('./helpers');
 
 /* For stubbing Redis callbacks */
@@ -26,7 +26,7 @@ const noop = () => {};
 class Oracle {
   constructor () {
     this._redis = client;
-    this.region = 'na';
+    this.region = 'na1';
     this.championIndexPromise = this.loadChampionIndex();
   }
 
@@ -40,16 +40,16 @@ class Oracle {
     const key = region + ':' + name;
     let cached = false;
 
-    return client.hgetAsync(key, 'id', noop)
+    return client.hgetAsync(key, 'id')
     .then(id => {
       if(id) {
         cached = true;
         return id;
       }
-      client.hset(key, 'id', id);
-      return getSummonerId(region, name);
+      return getAccountId(region, name);
     })
     .then(id => {
+      client.hsetAsync(key, 'id', id);
       return Promise.all([id, Profile.findOne({ id }).exec()]);
     })
     .spread((id, profile) => {
@@ -83,7 +83,7 @@ class Oracle {
     })
     .spread((matches, championIndex)  => {
       matches.forEach(match => parseMatch(match, matrix, championIndex));
-      client.hset(region + ':' + profile.name, 'lastMatch', profile.lastMatch, noop);
+      client.hsetAsync(region + ':' + profile.name, 'lastMatch', profile.lastMatch);
       return profile.save();
     })
     .then(profile => {

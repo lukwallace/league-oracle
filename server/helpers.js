@@ -32,7 +32,7 @@ const parseMatch = (match, matrix, championIndex) => {
   enemyTeam.forEach(championId => {
     const opponent = championIndex[championId].name;
     if(matrix[yourPick][opponent] === undefined) {
-      matrix[yourPick][opponent] = { wins: 0, total: 0 };
+      matrix[yourPick][opponent] = { wins: 0, total: 0, kills: 0, deaths: 0, assists: 0 };
     }
     matrix[yourPick][opponent].total++;
     if(youWin) {
@@ -40,6 +40,8 @@ const parseMatch = (match, matrix, championIndex) => {
     }
   });
 };
+
+const parseMatchTimeline = () => {};
 
 /* Used to sanitize names/regions; remove whitespace and illegal characters */
 const sanitize = (string) => {

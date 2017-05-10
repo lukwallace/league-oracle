@@ -7,7 +7,7 @@ const fetchChampionList = () => {
 }
 
 let fetchMatrix = (summonerName) => {
-  return fetch(SERVER + '/summoner/na/' + summonerName)
+  return fetch(SERVER + '/summoner/na1/' + summonerName)
   .then(res => res.json());
 };
 
